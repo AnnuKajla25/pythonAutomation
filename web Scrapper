@@ -1,0 +1,46 @@
+import requests
+import bs4
+from bs4 import BeautifulSoup
+import pandas as pd
+import time
+URL = "https://www.indeed.com/jobs?q=data+scientist&l=United+States"
+i=['','&start=10','&start=20','&start=30','&start=40','&start=50','&start=60','&start=70','&start=80','&start=90','&start=100','&start=110']
+URL_list=[]
+for x in i:
+    URL_list.append(URL+x) 
+def parse(url_list):
+    df = pd.DataFrame(columns=["Title","Location","Company","Salary", "Synopsis"])
+    for url in url_list:
+        html = requests.get(url)
+        soup = BeautifulSoup(html.content, 'html.parser', from_encoding="utf-8")   
+        moreJobs=soup.find_all(class_= "result" )
+        for each in moreJobs:
+            try: 
+                title = each.find(class_='jobtitle').text.replace('\n', '')
+                #print(title)
+            except:
+                title = 'None'
+            try:
+                location = each.find('span', {'class':"location" }).text.replace('\n', '')
+                #print(location)
+            except:
+                location = 'None'
+            try: 
+                company = each.find(class_='company').text.replace('\n', '')
+                #print(company)
+            except:
+                company = 'None'
+            try:
+                salary = each.find('span', {'class':'salary'}).text
+                #print(salary)
+            except:
+                salary = 'None'
+            try:
+                summary = each.find('div', {'class':"summary" }).text.replace('\n', '')
+                #print(location)
+            except:
+                summary = 'None'
+            
+            df = df.append({'Title':title, 'Location':location, 'Company':company, 'Salary':salary, 'Synopsis':summary}, ignore_index=True)
+    return df
+parse(URL_list)
